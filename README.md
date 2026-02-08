@@ -239,7 +239,7 @@ See [CHANGELOG_V2.md](CHANGELOG_V2.md) for detailed changes.
 
 <div align="center">
 
-**Made with ❤️ by Randhir (ManakRaj-7)**
+**Made with ❤️ by Manak Raj**
 
 ⭐ If you find this project useful, please consider starring it on GitHub!
 
