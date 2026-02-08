@@ -1,5 +1,7 @@
 # Smart Text Cleaner & Analyzer
 
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Streamlit%20Cloud-blue?style=for-the-badge)](https://nlp-inspector-mpt4gcpljcjke4dcdbwea4.streamlit.app)
+
 A beginner-friendly NLP web application built with Streamlit. Paste raw English text and get cleaned text, word statistics, keyword extraction, sentiment analysis, and a visualization of the top words.
 
 ## Features

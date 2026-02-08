@@ -2,6 +2,8 @@
 
 **Advanced NLP Application with Professional UI and Enterprise Features**
 
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Streamlit%20Cloud-blue?style=for-the-badge)](https://nlp-inspector-mpt4gcpljcjke4dcdbwea4.streamlit.app)
+
 ![Version](https://img.shields.io/badge/version-2.0-blue)
 ![Status](https://img.shields.io/badge/status-development-orange)
 ![Python](https://img.shields.io/badge/python-3.9+-green)
