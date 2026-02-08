@@ -5,6 +5,8 @@ Advanced NLP application with multiple features and beautiful UI
 
 import streamlit as st
 import pandas as pd
+import textwrap
+import streamlit.components.v1 as components
 from utils.text_processing import preprocess_text, get_tokens, get_text_statistics
 from utils.nlp_features import (
     get_sentiment, get_readability, get_language,
@@ -24,38 +26,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling
-st.markdown("""
-    <style>
-    [data-testid="stSidebar"] {
-        background-color: #f0f2f6;
-    }
-    
-    .main-header {
-        text-align: center;
-        padding: 20px 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .feature-box {
-        background-color: #f9f9f9;
-        padding: 15px;
-        border-radius: 8px;
-        border-left: 4px solid #667eea;
-        margin-bottom: 10px;
-    }
-    
-    .metric-card {
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    </style>
-""", unsafe_allow_html=True)
+# Note: theme-specific CSS is applied after the sidebar selection so
+# dark/light mode can be switched at runtime.
 
 # Sidebar
 with st.sidebar:
@@ -90,12 +62,69 @@ with st.sidebar:
     """)
 
 # Main header
-st.markdown("""
-    <div class="main-header">
-        <h1>🔍 Smart Text Analyzer</h1>
-        <p>Advanced Natural Language Processing & Text Analysis Tool</p>
-    </div>
-""", unsafe_allow_html=True)
+def apply_theme(selected_theme: str):
+    """Inject CSS for light or dark theme at runtime."""
+    common_css = """
+<style>
+.main-header { text-align: center; padding: 20px 0; border-radius: 10px; margin-bottom: 20px; }
+.feature-box { padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+.metric-card { padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+</style>
+    """
+
+    if selected_theme == "Dark":
+        # Strong CSS overrides (high specificity + !important) to force dark theme
+        dark_css = """
+    <style>
+    /* Force app background and text */
+    .stApp, .main, .block-container { background: #0f1724 !important; color: #e6eef8 !important; }
+    /* Sidebar */
+    [data-testid="stSidebar"] { background: #071020 !important; color: #cfe6ff !important; }
+    /* Header gradient */
+    .main-header { background: linear-gradient(135deg,#1f3a93 0%,#4b2b6f 100%) !important; color: #ffffff !important; padding: 24px !important; }
+    /* Info boxes */
+    .feature-box, .stCard { background: #0b1320 !important; border-left: 4px solid #2b6fb3 !important; }
+    .metric-card, .stMetric { background: #071022 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.6) !important; }
+    /* Inputs and textareas */
+    textarea, input, .stTextArea textarea, .stTextInput input, .stTextInput>div>div>input { background: #071022 !important; color: #e6eef8 !important; }
+    /* Tables and dataframes */
+    .stDataFrame, .stDataFrame div, .stTable { background: #0f1724 !important; color: #e6eef8 !important; }
+    /* Buttons */
+    .stButton>button { background: linear-gradient(90deg,#334b86,#6b3f90) !important; color: #fff !important; }
+    /* Plotly and matplotlib backgrounds */
+    .js-plotly-plot .plotly, .plotly, svg { background: transparent !important; }
+    /* Ensure code blocks don't show injected CSS */
+    .stExpander pre, .stCodeBlock pre { background: #071022 !important; color: #e6eef8 !important; }
+    </style>
+    """
+        components.html(textwrap.dedent(common_css + dark_css), height=0)
+    else:
+        # Strong CSS overrides for light theme (ensure consistent look)
+        light_css = """
+    <style>
+    .stApp, .main, .block-container { background: #ffffff !important; color: #0b1b2b !important; }
+    [data-testid="stSidebar"] { background: #f0f2f6 !important; color: #0b1b2b !important; }
+    .main-header { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%) !important; color: #ffffff !important; padding: 20px !important; }
+    .feature-box, .stCard { background: #f9f9f9 !important; border-left: 4px solid #667eea !important; }
+    .metric-card, .stMetric { background: #ffffff !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; }
+    textarea, input, .stTextArea textarea, .stTextInput input { background: #f7fafc !important; color: #0b1b2b !important; }
+    .stDataFrame, .stTable { background: #ffffff !important; color: #0b1b2b !important; }
+    .stButton>button { background: linear-gradient(90deg,#ff7b7b,#ffb86b) !important; color: #fff !important; }
+    </style>
+    """
+        components.html(textwrap.dedent(common_css + light_css), height=0)
+
+
+# apply selected theme
+apply_theme(theme)
+
+# Main header
+st.markdown(textwrap.dedent("""
+<div class="main-header">
+    <h1>🔍 Smart Text Analyzer</h1>
+    <p>Advanced Natural Language Processing & Text Analysis Tool</p>
+</div>
+"""), unsafe_allow_html=True)
 
 # Main content area
 tab1, tab2, tab3, tab4 = st.tabs(["📝 Analyze", "📊 Dashboard", "🔄 Compare", "ℹ️ Help"])
@@ -336,33 +365,33 @@ with tab3:
 
 with tab4:
     st.markdown("### ℹ️ Help & Guide")
-    st.markdown("""
-    #### 🎯 Features
-    
-    **Text Cleaning**
-    - Remove punctuation and special characters
-    - Convert to lowercase
-    - Remove English stopwords (optional)
-    - Filter by minimum word length
-    
-    **Analysis Features**
-    - 📊 Sentiment Analysis (Polarity & Subjectivity)
-    - 📚 Readability Scores (Flesch-Kincaid, etc.)
-    - 🏷️ Named Entity Recognition (Persons, Locations)
-    - 🔤 N-gram Analysis (Bigrams & Trigrams)
-    - ☁️ Word Cloud Visualization
-    - 🎯 TF-IDF Keyword Extraction
-    - 📈 Interactive Frequency Charts
-    
-    **Export Options**
-    - 📥 Download as CSV
-    - 📥 Download as JSON
-    
-    #### 💡 Tips
-    - Adjust the minimum word length to filter very short words
-    - Use the stopwords toggle to include/exclude common words
-    - Compare two texts to find similarities and differences
-    
-    #### 📧 Contact
-    For issues or suggestions, please reach out!
-    """)
+    st.markdown(textwrap.dedent("""
+#### 🎯 Features
+
+**Text Cleaning**
+- Remove punctuation and special characters
+- Convert to lowercase
+- Remove English stopwords (optional)
+- Filter by minimum word length
+
+**Analysis Features**
+- 📊 Sentiment Analysis (Polarity & Subjectivity)
+- 📚 Readability Scores (Flesch-Kincaid, etc.)
+- 🏷️ Named Entity Recognition (Persons, Locations)
+- 🔤 N-gram Analysis (Bigrams & Trigrams)
+- ☁️ Word Cloud Visualization
+- 🎯 TF-IDF Keyword Extraction
+- 📈 Interactive Frequency Charts
+
+**Export Options**
+- 📥 Download as CSV
+- 📥 Download as JSON
+
+#### 💡 Tips
+- Adjust the minimum word length to filter very short words
+- Use the stopwords toggle to include/exclude common words
+- Compare two texts to find similarities and differences
+
+#### 📧 Contact
+For issues or suggestions, please reach out!
+"""))
