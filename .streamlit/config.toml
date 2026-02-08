@@ -1,0 +1,6 @@
+[server]
+headless = true
+enableCORS = true
+
+[theme]
+# Default theme used; the app includes an in-app toggle override.
