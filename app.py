@@ -1,119 +1,368 @@
-import re
-from collections import Counter
+"""
+Smart Text Cleaner & Analyzer - Version 2
+Advanced NLP application with multiple features and beautiful UI
+"""
 
-import matplotlib.pyplot as plt
-import nltk
-import pandas as pd
 import streamlit as st
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from textblob import TextBlob
+import pandas as pd
+from utils.text_processing import preprocess_text, get_tokens, get_text_statistics
+from utils.nlp_features import (
+    get_sentiment, get_readability, get_language,
+    extract_entities, extract_ngrams, get_tfidf_keywords
+)
+from utils.visualizations import (
+    create_wordcloud, create_ngram_chart, create_sentiment_gauge,
+    create_frequency_comparison
+)
+from utils.exporters import export_to_csv, export_to_json
 
-# Ensure required NLTK data is available
-try:
-    nltk.data.find('tokenizers/punkt_tab')
-except LookupError:
-    try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        nltk.download('punkt_tab', quiet=True)
-        nltk.download('punkt', quiet=True)
+# Page configuration
+st.set_page_config(
+    page_title="Smart Text Analyzer",
+    page_icon="🔍",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords', quiet=True)
-
-STOPWORDS = set(stopwords.words("english"))
-
-st.set_page_config(page_title="Smart Text Cleaner & Analyzer", layout="centered")
-
-st.title("Smart Text Cleaner & Analyzer")
-st.write("Paste raw English text below and click **Analyze Text** to see cleaning and analysis results.")
-
-text_input = st.text_area("Enter text", height=250, placeholder="Paste or type text here...")
-
-def preprocess(text: str):
-    text = text.lower()
-    text = re.sub(r"\d+", " ", text)  # remove numbers
-    text = re.sub(r"[^\w\s]", " ", text)  # remove punctuation (keep letters and whitespace)
-    tokens = word_tokenize(text)
-    tokens = [t for t in tokens if t.isalpha() and t not in STOPWORDS and len(t) > 2]
-    return tokens
-
-def analyze_text(raw_text: str):
-    tokens = preprocess(raw_text)
-    
-    if not tokens:
-        return None
-    
-    cleaned_text = " ".join(tokens)
-    total_words = len(tokens)
-    unique_words = len(set(tokens))
-    freq = Counter(tokens)
-    freq_df = (
-        pd.DataFrame(freq.items(), columns=["word", "count"])
-        .sort_values(by="count", ascending=False)
-        .reset_index(drop=True)
-    )
-    top10 = freq_df.head(10)
-    
-    try:
-        polarity = TextBlob(raw_text).sentiment.polarity
-    except Exception:
-        polarity = 0.0
-    
-    if polarity > 0.1:
-        sentiment_label = "Positive 😊"
-    elif polarity < -0.1:
-        sentiment_label = "Negative 😔"
-    else:
-        sentiment_label = "Neutral 😐"
-    
-    return {
-        "cleaned_text": cleaned_text,
-        "total_words": total_words,
-        "unique_words": unique_words,
-        "freq_df": freq_df,
-        "top10": top10,
-        "polarity": polarity,
-        "sentiment_label": sentiment_label,
+# Custom CSS for better styling
+st.markdown("""
+    <style>
+    [data-testid="stSidebar"] {
+        background-color: #f0f2f6;
     }
+    
+    .main-header {
+        text-align: center;
+        padding: 20px 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .feature-box {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+        margin-bottom: 10px;
+    }
+    
+    .metric-card {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-if st.button("Analyze Text", type="primary"):
-    if not text_input or not text_input.strip():
-        st.warning("Please enter some text to analyze.")
-    else:
-        result = analyze_text(text_input)
-        
-        if result is None:
-            st.error("No meaningful words found after cleaning. Try entering more text.")
-        else:
-            st.subheader("Cleaned Text")
-            st.text_area("Cleaned output", value=result["cleaned_text"], height=180, disabled=True)
+# Sidebar
+with st.sidebar:
+    st.markdown("## ⚙️ Settings")
+    
+    # Theme toggle
+    st.markdown("### Theme")
+    theme = st.radio("Choose theme:", ["Light", "Dark"], label_visibility="collapsed")
+    
+    # Analysis options
+    st.markdown("### Analysis Options")
+    remove_stopwords = st.checkbox("Remove English Stopwords", value=True)
+    min_word_length = st.slider("Minimum Word Length:", 1, 5, 3)
+    
+    st.markdown("---")
+    
+    # Features toggle
+    st.markdown("### Features to Analyze")
+    show_sentiment = st.checkbox("📊 Sentiment Analysis", value=True)
+    show_readability = st.checkbox("📚 Readability Score", value=True)
+    show_entities = st.checkbox("🏷️ Named Entities", value=True)
+    show_ngrams = st.checkbox("🔤 N-gram Analysis", value=True)
+    show_wordcloud = st.checkbox("☁️ Word Cloud", value=True)
+    show_tfidf = st.checkbox("🎯 TF-IDF Keywords", value=True)
+    
+    st.markdown("---")
+    
+    st.markdown("""
+    ### 📖 About
+    Smart Text Analyzer v2.0  
+    Advanced NLP application for text analysis
+    """)
 
-            st.subheader("📊 Statistics")
-            cols = st.columns(2)
-            cols[0].metric("Total words (after cleaning)", result["total_words"])
-            cols[1].metric("Unique words", result["unique_words"])
+# Main header
+st.markdown("""
+    <div class="main-header">
+        <h1>🔍 Smart Text Analyzer</h1>
+        <p>Advanced Natural Language Processing & Text Analysis Tool</p>
+    </div>
+""", unsafe_allow_html=True)
 
-            st.subheader("📈 Word Frequency (all words)")
-            st.dataframe(result["freq_df"], use_container_width=True, hide_index=True)
+# Main content area
+tab1, tab2, tab3, tab4 = st.tabs(["📝 Analyze", "📊 Dashboard", "🔄 Compare", "ℹ️ Help"])
 
-            st.subheader("🎯 Top 10 Keywords")
-            st.dataframe(result["top10"].reset_index(drop=True), use_container_width=True, hide_index=True)
+with tab1:
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.subheader("Enter Your Text")
+        text_input = st.text_area(
+            "Paste or type text here...",
+            height=250,
+            placeholder="Enter text for analysis...",
+            label_visibility="collapsed"
+        )
+    
+    with col2:
+        st.write("### 📋 Quick Info")
+        if text_input:
+            st.metric("Characters", len(text_input))
+            st.metric("Words", len(text_input.split()))
+            st.metric("Sentences", len([s for s in text_input.split('.') if s.strip()]))
+    
+    # Analyze button
+    col1, col2, col3 = st.columns([1, 1, 3])
+    with col1:
+        analyze_btn = st.button("🚀 Analyze Text", type="primary", use_container_width=True)
+    with col2:
+        clear_btn = st.button("🗑️ Clear", use_container_width=True)
+    
+    if clear_btn:
+        st.rerun()
+    
+    # Analysis results
+    if analyze_btn and text_input.strip():
+        with st.spinner("🔄 Analyzing text..."):
+            try:
+                # Text processing
+                tokens = get_tokens(text_input, remove_stopwords, min_word_length)
+                cleaned_text = " ".join(tokens)
+                
+                if not tokens:
+                    st.error("❌ No meaningful words found. Try adjusting the minimum word length or using different text.")
+                else:
+                    # Get all statistics
+                    stats = get_text_statistics(text_input, tokens)
+                    sentiment = get_sentiment(text_input) if show_sentiment else None
+                    readability = get_readability(text_input) if show_readability else None
+                    language = get_language(text_input)
+                    entities = extract_entities(text_input) if show_entities else None
+                    
+                    # Display Cleaned Text
+                    st.markdown("---")
+                    st.subheader("✨ Cleaned Text")
+                    st.info(cleaned_text)
+                    
+                    # Statistics Dashboard
+                    st.markdown("---")
+                    st.subheader("📊 Text Statistics")
+                    
+                    stat_cols = st.columns(5)
+                    with stat_cols[0]:
+                        st.metric("Total Words (Cleaned)", stats["total_words_cleaned"])
+                    with stat_cols[1]:
+                        st.metric("Unique Words", stats["unique_words"])
+                    with stat_cols[2]:
+                        st.metric("Sentences", stats["sentence_count"])
+                    with stat_cols[3]:
+                        st.metric("Avg Word Length", stats["avg_word_length"])
+                    with stat_cols[4]:
+                        st.metric("Reading Time (min)", stats["reading_time_minutes"])
+                    
+                    # Sentiment Analysis
+                    if show_sentiment and sentiment:
+                        st.markdown("---")
+                        st.subheader("💭 Sentiment Analysis")
+                        sent_cols = st.columns(3)
+                        with sent_cols[0]:
+                            st.metric("Polarity", sentiment["polarity"], delta=sentiment["label"])
+                        with sent_cols[1]:
+                            st.metric("Subjectivity", sentiment["subjectivity"])
+                        with sent_cols[2]:
+                            st.metric("Sentiment", sentiment["label"])
+                    
+                    # Readability
+                    if show_readability and readability:
+                        st.markdown("---")
+                        st.subheader("📚 Readability Score")
+                        read_cols = st.columns(3)
+                        with read_cols[0]:
+                            st.metric("Flesch-Kincaid Grade", readability["flesch_kincaid_grade"])
+                        with read_cols[1]:
+                            st.metric("Flesch Reading Ease", readability["flesch_reading_ease"])
+                        with read_cols[2]:
+                            st.write(f"**Difficulty Level:**  \n{readability['difficulty_level']}")
+                    
+                    # Named Entities
+                    if show_entities and entities and "error" not in entities:
+                        st.markdown("---")
+                        st.subheader("🏷️ Named Entities")
+                        entity_cols = st.columns(2)
+                        with entity_cols[0]:
+                            if entities["PERSON"]:
+                                st.write("**👤 Persons:**")
+                                for person in entities["PERSON"][:5]:
+                                    st.write(f"- {person}")
+                        with entity_cols[1]:
+                            if entities["LOCATION"]:
+                                st.write("**📍 Locations:**")
+                                for loc in entities["LOCATION"][:5]:
+                                    st.write(f"- {loc}")
+                    
+                    # Word Frequency Table
+                    st.markdown("---")
+                    st.subheader("📈 Word Frequency")
+                    st.dataframe(stats["freq_df"].head(15), use_container_width=True, hide_index=True)
+                    
+                    # N-gram Analysis
+                    if show_ngrams:
+                        st.markdown("---")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.subheader("🔤 Bigrams (2-word phrases)")
+                            bigrams = extract_ngrams(tokens, 2)
+                            if bigrams:
+                                bigrams_df = pd.DataFrame(bigrams, columns=["bigram", "frequency"])
+                                fig_bigram = create_ngram_chart(bigrams, 2)
+                                st.plotly_chart(fig_bigram, use_container_width=True)
+                        with col2:
+                            st.subheader("🔤 Trigrams (3-word phrases)")
+                            trigrams = extract_ngrams(tokens, 3)
+                            if trigrams:
+                                trigrams_df = pd.DataFrame(trigrams, columns=["trigram", "frequency"])
+                                fig_trigram = create_ngram_chart(trigrams, 3)
+                                st.plotly_chart(fig_trigram, use_container_width=True)
+                    
+                    # TF-IDF Keywords
+                    if show_tfidf:
+                        st.markdown("---")
+                        st.subheader("🎯 TF-IDF Keywords")
+                        tfidf_df = get_tfidf_keywords(text_input, 10)
+                        if not tfidf_df.empty and "error" not in tfidf_df.columns:
+                            st.dataframe(tfidf_df.head(10), use_container_width=True, hide_index=True)
+                    
+                    # Word Cloud
+                    if show_wordcloud:
+                        st.markdown("---")
+                        st.subheader("☁️ Word Cloud")
+                        wc_fig = create_wordcloud(tokens, "Most Frequent Words")
+                        if wc_fig:
+                            st.pyplot(wc_fig)
+                    
+                    # Frequency Chart
+                    st.markdown("---")
+                    st.subheader("📊 Interactive Frequency Chart")
+                    freq_chart = create_frequency_comparison(stats["freq_df"], 10)
+                    st.plotly_chart(freq_chart, use_container_width=True)
+                    
+                    # Export Section
+                    st.markdown("---")
+                    st.subheader("💾 Export Results")
+                    exp_col1, exp_col2 = st.columns(2)
+                    
+                    with exp_col1:
+                        csv_data = export_to_csv({
+                            "total_words_cleaned": stats["total_words_cleaned"],
+                            "unique_words": stats["unique_words"],
+                            "total_words_original": stats["total_words_original"],
+                            "characters": stats["characters"],
+                            "reading_time_minutes": stats["reading_time_minutes"],
+                            "sentiment": sentiment,
+                            "readability": readability,
+                        })
+                        st.download_button(
+                            label="📥 Download CSV",
+                            data=csv_data,
+                            file_name="analysis_results.csv",
+                            mime="text/csv"
+                        )
+                    
+                    with exp_col2:
+                        json_data = export_to_json({
+                            "total_words_cleaned": stats["total_words_cleaned"],
+                            "unique_words": stats["unique_words"],
+                            "total_words_original": stats["total_words_original"],
+                            "characters": stats["characters"],
+                            "reading_time_minutes": stats["reading_time_minutes"],
+                            "sentiment": sentiment,
+                            "readability": readability,
+                            "language": language,
+                            "entities": entities,
+                            "freq_df": stats["freq_df"],
+                        })
+                        st.download_button(
+                            label="📥 Download JSON",
+                            data=json_data,
+                            file_name="analysis_results.json",
+                            mime="application/json"
+                        )
+            
+            except Exception as e:
+                st.error(f"❌ Error during analysis: {str(e)}")
 
-            st.subheader("💭 Sentiment Analysis")
-            col1, col2 = st.columns(2)
-            col1.metric("Polarity Score", f"{result['polarity']:.3f}")
-            col2.metric("Sentiment", result['sentiment_label'])
+with tab2:
+    st.markdown("### 📊 Dashboard")
+    st.info("Analyze text in the first tab to see the dashboard with visualizations.")
 
-            if not result["top10"].empty:
-                fig, ax = plt.subplots(figsize=(10, 5))
-                ax.bar(result["top10"]["word"], result["top10"]["count"], color="#4c78a8", edgecolor="black", alpha=0.7)
-                ax.set_xlabel("Words", fontsize=12)
-                ax.set_ylabel("Frequency", fontsize=12)
-                ax.set_title("Top 10 Most Frequent Words", fontsize=14, fontweight="bold")
-                plt.xticks(rotation=45, ha="right")
-                plt.tight_layout()
-                st.pyplot(fig)
+with tab3:
+    st.markdown("### 🔄 Text Comparison")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        text1 = st.text_area("Text 1:", height=200, key="text1")
+    
+    with col2:
+        text2 = st.text_area("Text 2:", height=200, key="text2")
+    
+    if st.button("Compare Texts", type="primary"):
+        if text1 and text2:
+            tokens1 = set(get_tokens(text1, True, 3))
+            tokens2 = set(get_tokens(text2, True, 3))
+            
+            st.markdown("---")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Common Words", len(tokens1 & tokens2))
+            with col2:
+                st.metric("Unique to Text 1", len(tokens1 - tokens2))
+            with col3:
+                st.metric("Unique to Text 2", len(tokens2 - tokens1))
+            
+            st.markdown("---")
+            st.subheader("📝 Common Words")
+            common_words = sorted(list(tokens1 & tokens2))
+            if common_words:
+                st.write(", ".join(common_words[:50]))
+
+with tab4:
+    st.markdown("### ℹ️ Help & Guide")
+    st.markdown("""
+    #### 🎯 Features
+    
+    **Text Cleaning**
+    - Remove punctuation and special characters
+    - Convert to lowercase
+    - Remove English stopwords (optional)
+    - Filter by minimum word length
+    
+    **Analysis Features**
+    - 📊 Sentiment Analysis (Polarity & Subjectivity)
+    - 📚 Readability Scores (Flesch-Kincaid, etc.)
+    - 🏷️ Named Entity Recognition (Persons, Locations)
+    - 🔤 N-gram Analysis (Bigrams & Trigrams)
+    - ☁️ Word Cloud Visualization
+    - 🎯 TF-IDF Keyword Extraction
+    - 📈 Interactive Frequency Charts
+    
+    **Export Options**
+    - 📥 Download as CSV
+    - 📥 Download as JSON
+    
+    #### 💡 Tips
+    - Adjust the minimum word length to filter very short words
+    - Use the stopwords toggle to include/exclude common words
+    - Compare two texts to find similarities and differences
+    
+    #### 📧 Contact
+    For issues or suggestions, please reach out!
+    """)
