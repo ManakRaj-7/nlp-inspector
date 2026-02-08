@@ -1,13 +1,41 @@
-# 🔍 Smart Text Analyzer - Version 2.0
+# 🔍 NLP Inspector - Advanced Edition (v2.0)
 
-**Advanced NLP Application with Professional UI and Enterprise Features**
+**Enterprise-Grade Natural Language Processing & Text Intelligence Suite**
 
-[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Streamlit%20Cloud-blue?style=for-the-badge)](https://nlp-inspector-mpt4gcpljcjke4dcdbwea4.streamlit.app)
+---
 
-![Version](https://img.shields.io/badge/version-2.0-blue)
-![Status](https://img.shields.io/badge/status-development-orange)
-![Python](https://img.shields.io/badge/python-3.9+-green)
-![License](https://img.shields.io/badge/license-MIT-red)
+<div align="center">
+
+[![Live Demo](https://img.shields.io/badge/🚀%20Launch%20Live%20App-Streamlit%20Cloud-blue?style=for-the-badge&logo=streamlit)](https://nlp-inspector-mpt4gcpljcjke4dcdbwea4.streamlit.app)
+[![GitHub Repository](https://img.shields.io/badge/📦%20GitHub-Source%20Code-black?style=for-the-badge&logo=github)](https://github.com/ManakRaj-7/nlp-inspector)
+[![Python Version](https://img.shields.io/badge/python-3.9+-green?style=flat&logo=python)](https://www.python.org)
+[![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red?style=flat&logo=streamlit)](https://streamlit.io)
+[![License MIT](https://img.shields.io/badge/license-MIT-orange?style=flat)](LICENSE)
+
+![Version](https://img.shields.io/badge/version-2.0-blue?style=flat)
+![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen?style=flat)
+![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen?style=flat)
+
+</div>
+
+---
+
+## 🌟 What's New in v2.0?
+
+Version 2.0 is a **complete redesign** with professional UI/UX, advanced NLP features, and enterprise-grade capabilities:
+
+| Feature | v1.0 | v2.0 |
+|---------|------|------|
+| **Core Analysis** | Basic | Advanced |
+| **Visualizations** | Static | Interactive (Plotly) |
+| **Export Options** | None | CSV & JSON |
+| **User Interface** | Simple | Professional |
+| **Theme Support** | No | Light/Dark Toggle |
+| **Text Comparison** | No | Yes |
+| **Advanced NLP** | Limited | Full Suite |
+| **Readability Metrics** | No | Yes (5+ indices) |
+| **Entity Recognition** | No | Yes (spaCy) |
+| **Language Detection** | No | Yes (Multi-language) |
 
 ## 🌟 Features Overview
 
