@@ -55,3 +55,4 @@ htmlcov/
 .streamlit/cache/
 *.pickle
 *.pkl
+!.streamlit/config.toml
